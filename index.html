@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>仙道減重 - 修仙運動升級系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <!-- PWA 設定 -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#d4a843">
+    <link rel="apple-touch-icon" href="images/icon-192.png">
+
+    <style>
+        :root {
+            --primary-gold: #d4a843;
+            --primary-gold-light: #f0d78c;
+            --dark-bg: #0f172a;
+            --card-bg: rgba(15, 23, 42, 0.85);
+            --accent-red: #c0392b;
+            --accent-green: #27ae60;
+            --accent-blue: #2980b9;
+            --accent-purple: #8e44ad;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Serif TC', serif;
+            background: var(--dark-bg);
+            color: #e2e8f0;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* 頁面背景 */
+        .page-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -3; background-color: #0f172a; background-size: cover; background-position: center; display: none; 
+        }
+        .page-bg.active { display: block; }
+        .page-bg::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+        }
+
+        .bg-login { background-image: url('images/bg_login.jpg'); }
+        .bg-dashboard { background-image: url('images/bg_dashboard.jpg'); }
+        .bg-exercise { background-image: url('images/bg_exercise.jpg'); }
+        .bg-talent { background-image: url('images/bg_talent.jpg'); }
+        .bg-pet { background-image: url('images/bg_pet.jpg'); }
+        .bg-companion { background-image: url('images/bg_companion.jpg'); }
+        .bg-ranking { background-image: url('images/bg_ranking.jpg'); }
+
+        .bg-stars {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2;
+            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%); opacity: 0.3;
+        }
+        .star { position: absolute; background: white; border-radius: 50%; animation: twinkle var(--duration) ease-in-out infinite; opacity: var(--opacity); }
+        @keyframes twinkle { 0%, 100% { opacity: var(--opacity); transform: scale(1); } 50% { opacity: 0.2; transform: scale(0.8); } }
+
+        .spirit-flow {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.15;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(212, 168, 67, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(142, 68, 173, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(41, 128, 185, 0.2) 0%, transparent 50%);
+            animation: spiritMove 20s ease-in-out infinite;
+        }
+        @keyframes spiritMove { 0%, 100% { transform: translate(0, 0); } 33% { transform: translate(30px, -30px); } 66% { transform: translate(-20px, 20px); } }
+
+        .gold-border {
+            border: 2px solid var(--primary-gold);
+            box-shadow: 0 0 10px rgba(212, 168, 67, 0.3), inset 0 0 20px rgba(212, 168, 67, 0.1);
+            position: relative;
+        }
+        .gold-border::before { content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px; border: 1px solid rgba(212, 168, 67, 0.5); pointer-events: none; }
+
+        .realm-badge {
+            background: linear-gradient(135deg, #d4a843 0%, #b8941f 100%); color: #0f172a; padding: 4px 16px; border-radius: 20px;
+            font-weight: 900; font-size: 0.9rem; box-shadow: 0 0 15px rgba(212, 168, 67, 0.5); display: inline-flex; align-items: center; gap: 6px;
+        }
+        .realm-badge::before { content: '✦'; font-size: 1.2rem; }
+
+        .exp-bar-container { background: rgba(255, 255, 255, 0.1); border-radius: 10px; height: 24px; overflow: hidden; position: relative; border: 1px solid rgba(212, 168, 67, 0.3); }
+        .exp-bar { height: 100%; border-radius: 10px; background: linear-gradient(90deg, #d4a843 0%, #f0d78c 50%, #d4a843 100%); transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; }
+        .exp-bar::after { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); animation: shimmer 2s infinite; }
+        @keyframes shimmer { 0% { left: -100%; } 100% { left: 100%; } }
+
+        .stat-card { background: var(--card-bg); border: 1px solid rgba(212, 168, 67, 0.2); border-radius: 12px; padding: 16px; transition: all 0.3s ease; backdrop-filter: blur(10px); }
+        .stat-card:hover { border-color: rgba(212, 168, 67, 0.5); transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }
+
+        .exercise-btn {
+            position: relative; background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.9) 100%);
+            border: 2px solid var(--primary-gold); border-radius: 16px; padding: 24px; cursor: pointer; transition: all 0.3s ease;
+            overflow: hidden; text-align: left; width: 100%; min-height: 220px; display: flex; align-items: center;
+        }
+        .exercise-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(212, 168, 67, 0.2), transparent); transition: left 0.5s ease; }
+        .exercise-btn:hover::before { left: 100%; }
+        .exercise-btn:hover { transform: translateY(-3px); box-shadow: 0 0 30px rgba(212, 168, 67, 0.3); border-color: var(--primary-gold-light); }
+        .exercise-btn:active { transform: translateY(0); }
+        .exercise-btn.cooldown { opacity: 0.6; cursor: not-allowed; border-color: #64748b; }
+        .exercise-btn.cooldown:hover { transform: none; box-shadow: none; }
+        .cooldown-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); display: flex; align-items: center; justify-content: center; border-radius: 14px; font-size: 1.5rem; font-weight: 900; color: var(--primary-gold); }
+
+        @keyframes popUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 50% { transform: translateY(-30px) scale(1.2); opacity: 1; } 100% { transform: translateY(-60px) scale(0.8); opacity: 0; } }
+        .float-text { position: fixed; pointer-events: none; font-weight: 900; font-size: 1.5rem; z-index: 1000; animation: popUp 1.5s ease-out forwards; text-shadow: 0 0 10px currentColor; }
+
+        @keyframes breakthrough { 0% { transform: scale(1); filter: brightness(1); } 25% { transform: scale(1.05); filter: brightness(2); } 50% { transform: scale(1.1); filter: brightness(3); } 75% { transform: scale(1.05); filter: brightness(2); } 100% { transform: scale(1); filter: brightness(1); } }
+        .breakthrough-anim { animation: breakthrough 2s ease-in-out; }
+        .particle { position: fixed; pointer-events: none; border-radius: 50%; z-index: 999; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal-content { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 3px solid var(--primary-gold); border-radius: 24px; padding: 40px; max-width: 500px; width: 90%; text-align: center; transform: scale(0.8); transition: transform 0.5s ease; box-shadow: 0 0 50px rgba(212, 168, 67, 0.3); }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+
+        /* CG 查看器樣式 */
+        .cg-viewer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 4000; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        .cg-viewer-overlay.active { display: flex; }
+        .cg-viewer-img { max-width: 90%; max-height: 85vh; border-radius: 8px; box-shadow: 0 0 40px rgba(212, 168, 67, 0.5); }
+        .cg-viewer-close { position: absolute; top: 20px; right: 40px; font-size: 3rem; color: var(--primary-gold); cursor: pointer; transition: transform 0.2s; }
+        .cg-viewer-close:hover { transform: rotate(90deg); color: #fff; }
+        .cg-viewer-title { color: var(--primary-gold); font-size: 1.5rem; margin-top: 20px; font-weight: 700; text-shadow: 0 0 10px rgba(0,0,0,0.8); }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: var(--primary-gold); border-radius: 4px; }
+
+        .achievement { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(212, 168, 67, 0.15); border: 1px solid rgba(212, 168, 67, 0.3); border-radius: 20px; font-size: 0.85rem; margin: 4px; }
+        .achievement.locked { opacity: 0.4; filter: grayscale(1); }
+
+        .spirit-root-btn { padding: 16px 24px; border: 2px solid; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; text-align: center; background: rgba(15, 23, 42, 0.8); display: flex; flex-direction: column; align-items: center; }
+        .spirit-root-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .spirit-root-btn.selected { box-shadow: 0 0 20px currentColor; }
+
+        .check-in-day { width: 50px; height: 50px; border-radius: 12px; border: 2px solid rgba(212, 168, 67, 0.3); display: flex; align-items: center; justify-content: center; font-weight: 700; transition: all 0.3s ease; }
+        .check-in-day.checked { background: var(--primary-gold); color: #0f172a; border-color: var(--primary-gold); box-shadow: 0 0 15px rgba(212, 168, 67, 0.5); }
+        .check-in-day.today { border-color: var(--primary-gold-light); box-shadow: 0 0 10px rgba(212, 168, 67, 0.3); animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { box-shadow: 0 0 10px rgba(212, 168, 67, 0.3); } 50% { box-shadow: 0 0 20px rgba(212, 168, 67, 0.6); } }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        .nav-btn { padding: 12px 20px; border: none; background: transparent; color: #94a3b8; cursor: pointer; transition: all 0.3s ease; border-radius: 8px; font-family: 'Noto Serif TC', serif; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+        .nav-btn:hover, .nav-btn.active { color: var(--primary-gold); background: rgba(212, 168, 67, 0.1); }
+        .nav-btn.active { border-bottom: 2px solid var(--primary-gold); }
+
+        .rank-item { display: flex; align-items: center; gap: 16px; padding: 12px 16px; background: rgba(15, 23, 42, 0.6); border-radius: 12px; margin-bottom: 8px; border: 1px solid rgba(212, 168, 67, 0.1); transition: all 0.3s ease; }
+        .rank-item:hover { border-color: rgba(212, 168, 67, 0.3); transform: translateX(5px); }
+        .rank-number { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.1rem; flex-shrink: 0; }
+        .rank-1 { background: linear-gradient(135deg, #ffd700, #ffed4a); color: #0f172a; }
+        .rank-2 { background: linear-gradient(135deg, #c0c0c0, #e8e8e8); color: #0f172a; }
+        .rank-3 { background: linear-gradient(135deg, #cd7f32, #daa520); color: #0f172a; }
+        .rank-other { background: rgba(255,255,255,0.1); color: #94a3b8; }
+
+        .companion-card, .pet-card { background: rgba(15, 23, 42, 0.8); border: 2px solid rgba(212, 168, 67, 0.2); border-radius: 16px; padding: 20px; text-align: center; transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .companion-card:hover, .pet-card:hover { border-color: var(--primary-gold); transform: translateY(-3px); }
+        .companion-card.locked, .pet-card.locked { opacity: 0.5; filter: grayscale(0.8); }
+
+        .companion-img, .pet-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary-gold); box-shadow: 0 0 20px rgba(212, 168, 67, 0.3); margin-bottom: 12px; transition: all 0.3s ease; }
+        .companion-card:hover .companion-img, .pet-card:hover .pet-img { transform: scale(1.05); box-shadow: 0 0 30px rgba(212, 168, 67, 0.5); }
+        .companion-card.locked .companion-img, .pet-card.locked .pet-img { filter: grayscale(1) brightness(0.5); }
+
+        .affection-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+        .affection-fill { height: 100%; background: linear-gradient(90deg, #e74c3c, #f39c12); border-radius: 4px; transition: width 0.5s ease; }
+
+        .xian-input { background: rgba(15, 23, 42, 0.8); border: 2px solid rgba(212, 168, 67, 0.3); border-radius: 12px; padding: 12px 16px; color: #e2e8f0; font-family: 'Noto Serif TC', serif; font-size: 1rem; width: 100%; transition: all 0.3s ease; }
+        .xian-input:focus { outline: none; border-color: var(--primary-gold); box-shadow: 0 0 15px rgba(212, 168, 67, 0.2); }
+        .xian-input::placeholder { color: #64748b; }
+
+        .xian-btn { background: linear-gradient(135deg, #d4a843 0%, #b8941f 100%); color: #0f172a; border: none; padding: 14px 32px; border-radius: 12px; font-family: 'Noto Serif TC', serif; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(212, 168, 67, 0.3); }
+        .xian-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(212, 168, 67, 0.5); }
+        .xian-btn:active { transform: translateY(0); }
+        .xian-btn-secondary { background: transparent; border: 2px solid var(--primary-gold); color: var(--primary-gold); box-shadow: none; }
+        .xian-btn-secondary:hover { background: rgba(212, 168, 67, 0.1); }
+        .xian-btn:disabled, .xian-btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .title-decoration { display: flex; align-items: center; gap: 16px; justify-content: center; margin-bottom: 24px; }
+        .title-decoration::before, .title-decoration::after { content: ''; width: 60px; height: 2px; background: linear-gradient(90deg, transparent, var(--primary-gold)); }
+        .title-decoration::after { background: linear-gradient(90deg, var(--primary-gold), transparent); }
+
+        .notification { position: fixed; top: 20px; right: 20px; background: rgba(15, 23, 42, 0.95); border: 2px solid var(--primary-gold); border-radius: 12px; padding: 16px 24px; z-index: 3000; transform: translateX(400px); transition: transform 0.5s ease; max-width: 350px; }
+        .notification.show { transform: translateX(0); }
+
+        .hidden-ending-hint { background: linear-gradient(135deg, rgba(142, 68, 173, 0.2), rgba(41, 128, 185, 0.2)); border: 2px dashed rgba(142, 68, 173, 0.5); border-radius: 16px; padding: 20px; text-align: center; margin-top: 20px; }
+        .hidden-ending-hint.locked { filter: blur(4px); user-select: none; }
+
+        .interaction-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+        .interaction-btn { background: rgba(212, 168, 67, 0.1); border: 1px solid rgba(212, 168, 67, 0.3); border-radius: 8px; padding: 8px; color: var(--primary-gold); font-size: 0.85rem; cursor: pointer; transition: all 0.3s ease; font-family: 'Noto Serif TC', serif; }
+        .interaction-btn:hover:not(:disabled) { background: rgba(212, 168, 67, 0.3); color: #f0d78c; }
+        .interaction-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* CG 縮圖樣式 */
+        .cg-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(212, 168, 67, 0.2); }
+        .cg-thumb { position: relative; width: 100%; padding-bottom: 56.25%; border-radius: 6px; overflow: hidden; cursor: pointer; border: 1px solid rgba(212, 168, 67, 0.3); transition: all 0.3s ease; }
+        .cg-thumb img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+        .cg-thumb:hover { transform: scale(1.05); border-color: var(--primary-gold); box-shadow: 0 0 15px rgba(212, 168, 67, 0.3); }
+        .cg-thumb.locked { filter: brightness(0.3) grayscale(1); cursor: not-allowed; }
+        .cg-thumb.locked::after { content: '🔒'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.5rem; }
+
+        @keyframes battleShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px) rotate(-5deg); } 75% { transform: translateX(10px) rotate(5deg); } }
+        .battle-shake { animation: battleShake 0.5s ease-in-out; }
+
+        .demon-card { background: linear-gradient(135deg, rgba(192, 57, 43, 0.2), rgba(142, 68, 173, 0.2)); border: 2px solid rgba(192, 57, 43, 0.5); border-radius: 16px; padding: 24px; text-align: center; position: relative; overflow: hidden; }
+        .demon-card::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(192, 57, 43, 0.1) 0%, transparent 70%); animation: demonPulse 4s ease-in-out infinite; }
+        @keyframes demonPulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 0.8; } }
+
+        /* ==================== 手機版響應式設計 (RWD) 優化版 ==================== */
+        @media (max-width: 768px) {
+            /* --- 基礎排版優化 --- */
+            body {
+                font-size: 14px;
+            }
+            .page-container { 
+                padding: 12px !important; 
+            }
+            .title-decoration {
+                margin-bottom: 16px;
+            }
+            .title-decoration::before, .title-decoration::after {
+                width: 30px; /* 縮短手機端的裝飾線，防止文字折行 */
+            }
+
+            /* --- 導航列改進（Nav） --- */
+            .nav-brand-text { 
+                display: none; /* 隱藏 Logo 文字，留出頂部空間 */
+            }
+            #mainPage nav > div {
+                flex-direction: column; /* 讓頂部欄與導航按鈕區上下分開 */
+                gap: 10px !important;
+                padding: 4px 0;
+            }
+            .nav-scroll-container {
+                width: 100vw;
+                margin-left: -12px; /* 破開側邊距限制，實現全螢幕橫向滑動 */
+                margin-right: -12px;
+                display: flex;
+                overflow-x: auto;
+                white-space: nowrap;
+                justify-content: flex-start;
+                padding: 4px 12px 10px 12px;
+                scrollbar-width: none; /* 隱藏 Firefox 的捲軸 */
+                -webkit-overflow-scrolling: touch;
+            }
+            .nav-scroll-container::-webkit-scrollbar {
+                display: none; /* 隱藏 Chrome/Safari 的捲軸 */
+            }
+            .nav-btn { 
+                padding: 6px 14px; 
+                font-size: 0.9rem; 
+                flex-shrink: 0; 
+                border-radius: 20px;
+                background: rgba(255, 255, 255, 0.05); /* 手機端加上微背景更像 App 頁籤 */
+            }
+            .nav-btn.active {
+                border-bottom: none;
+                background: rgba(212, 168, 67, 0.2);
+                box-shadow: inset 0 0 8px rgba(212, 168, 67, 0.3);
+            }
+
+            /* --- 創建角色 / 登入頁 --- */
+            #loginPage > div {
+                padding: 12px !important;
+            }
+            #loginPage h1 {
+                font-size: 2rem !important;
+            }
+            #loginPage .spirit-root-btn {
+                padding: 12px 8px !important;
+            }
+            #loginPage .spirit-root-btn img {
+                width: 36px !important;
+                height: 36px !important;
+            }
+
+            /* --- 修為面板（Dashboard） --- */
+            .dashboard-header {
+                flex-direction: column !important;
+                align-items: center !important; /* 手機上居中更美觀 */
+                text-align: center;
+                gap: 16px !important;
+            }
+            .dashboard-header > div:last-child {
+                text-align: center !important;
+                width: 100%;
+                border-top: 1px solid rgba(212, 168, 67, 0.1);
+                padding-top: 12px;
+            }
+            .stat-grid {
+                grid-template-columns: repeat(2, 1fr) !important; /* 4格改為 2x2 排版 */
+                gap: 10px !important;
+            }
+            .stat-card {
+                padding: 12px !important;
+            }
+
+            /* --- 修煉功能（Exercise）與通用響應式網格 --- */
+            .responsive-grid {
+                grid-template-columns: 1fr !important; /* 所有卡片改為單列垂直堆疊 */
+                gap: 14px !important;
+            }
+            .exercise-btn {
+                flex-direction: column !important;
+                text-align: center !important;
+                min-height: auto !important;
+                padding: 16px !important;
+            }
+            .exercise-btn > div {
+                flex-direction: column !important;
+                gap: 12px !important;
+                width: 100%;
+            }
+            .exercise-img-wrapper {
+                width: 90px !important; /* 縮小運動圖示，避免佔用過多垂直空間 */
+                height: 90px !important;
+                margin: 0 auto;
+            }
+            .exercise-btn > div > div:last-child {
+                padding: 0 !important;
+                text-align: center !important;
+            }
+            .exercise-btn > div > div:last-child > div:last-child {
+                justify-content: center !important; /* 讓手機端的數值顯示居中 */
+            }
+
+            /* --- 道侶與靈寵頁面 --- */
+            .companion-card, .pet-card {
+                padding: 14px !important;
+            }
+            .companion-img, .pet-img {
+                width: 90px !important;
+                height: 90px !important;
+            }
+            .interaction-grid {
+                grid-template-columns: repeat(2, 1fr) !important; /* 保持 2x2 按鈕 */
+                gap: 6px !important;
+            }
+
+            /* --- CG 畫廊（縮圖） --- */
+            .cg-gallery {
+                grid-template-columns: repeat(2, 1fr) !important; /* 手機端 3行改為 2行 顯示更清晰 */
+                gap: 8px !important;
+            }
+
+            /* --- 天榜（排行榜） --- */
+            .rank-item {
+                gap: 10px !important;
+                padding: 8px 12px !important;
+            }
+            .rank-number {
+                width: 28px !important;
+                height: 28px !important;
+                font-size: 0.85rem !important;
+            }
+
+            /* --- 心魔挑戰區域 --- */
+            .demon-stats {
+                flex-direction: column !important;
+                gap: 12px !important;
+            }
+
+            /* --- 全局彈窗與提示（Modal & Notification） --- */
+            .modal-content {
+                padding: 20px !important;
+                width: 92% !important;
+                border-radius: 16px !important;
+            }
+            .modal-content h2 {
+                font-size: 1.6rem !important;
+            }
+            .cg-viewer-img {
+                max-width: 96% !important;
+                max-height: 75vh !important;
+            }
+            .cg-viewer-close {
+                top: 15px !important;
+                right: 20px !important;
+                font-size: 2.2rem !important;
+            }
+            .notification {
+                top: auto;
+                bottom: 20px; /* 手機上彈出通知改在底部，更符合大螢幕手機的操作習慣 */
+                left: 10px;
+                right: 10px;
+                max-width: calc(100% - 20px);
+                transform: translateY(200px);
+            }
+            .notification.show {
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 頁面背景 -->
+    <div class="page-bg bg-login active" id="bgLogin"></div>
+    <div class="page-bg bg-dashboard" id="bgDashboard"></div>
+    <div class="page-bg bg-exercise" id="bgExercise"></div>
+    <div class="page-bg bg-talent" id="bgTalent"></div>
+    <div class="page-bg bg-pet" id="bgPet"></div>
+    <div class="page-bg bg-companion" id="bgCompanion"></div>
+    <div class="page-bg bg-ranking" id="bgRanking"></div>
+    <div class="bg-stars" id="starsContainer"></div>
+    <div class="spirit-flow"></div>
+
+    <div class="notification" id="notification">
+        <div style="font-weight: 700; color: var(--primary-gold); margin-bottom: 4px;" id="notifTitle"></div>
+        <div style="color: #94a3b8; font-size: 0.9rem;" id="notifMessage"></div>
+    </div>
+
+    <div class="modal-overlay" id="breakthroughModal">
+        <div class="modal-content">
+            <div style="font-size: 4rem; margin-bottom: 16px;">⚡</div>
+            <h2 style="font-size: 2rem; color: var(--primary-gold); margin-bottom: 12px; font-weight: 900;">境界突破！</h2>
+            <p style="font-size: 1.2rem; color: #e2e8f0; margin-bottom: 8px;">恭喜道友成功突破至</p>
+            <div style="font-size: 1.8rem; color: var(--primary-gold-light); font-weight: 900; margin-bottom: 20px;" id="newRealmName"></div>
+            <p style="color: #94a3b8; margin-bottom: 24px;" id="realmBonus"></p>
+            <button class="xian-btn" onclick="closeModal()">繼續修煉</button>
+        </div>
+    </div>
+
+    <!-- CG 全螢幕查看器 -->
+    <div class="cg-viewer-overlay" id="cgViewer" onclick="closeCGViewer()">
+        <div class="cg-viewer-close">✕</div>
+        <img src="" alt="CG" class="cg-viewer-img" id="cgViewerImg">
+        <div class="cg-viewer-title" id="cgViewerTitle"></div>
+    </div>
+
+    <div class="page active" id="loginPage">
+        <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;">
+            <div style="max-width: 500px; width: 100%; text-align: center;">
+                <img src="images/avatar_player.png" alt="仙道減重" style="display: block; margin: 0 auto 16px; width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--primary-gold); box-shadow: 0 0 20px rgba(212, 168, 67, 0.3);">
+                <h1 style="font-size: 2.5rem; font-weight: 900; color: var(--primary-gold); margin-bottom: 8px; text-shadow: 0 0 20px rgba(212, 168, 67, 0.3);">仙道減重</h1>
+                <p style="color: #94a3b8; margin-bottom: 32px; font-size: 1.1rem;">以修仙之道，鑄減重之基</p>
+
+                <div style="background: var(--card-bg); border: 2px solid rgba(212, 168, 67, 0.3); border-radius: 24px; padding: 32px; backdrop-filter: blur(10px);">
+                    <h2 style="font-size: 1.5rem; margin-bottom: 24px; color: var(--primary-gold);">創建道號</h2>
+                    <input type="text" class="xian-input" id="playerName" placeholder="請輸入你的道號..." style="margin-bottom: 24px;">
+
+                    <h3 style="font-size: 1.2rem; margin-bottom: 16px; color: #e2e8f0;">選擇靈根</h3>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px;">
+                        <div class="spirit-root-btn" data-root="fire" style="border-color: #e74c3c; color: #e74c3c;" onclick="selectRoot('fire')">
+                            <img src="images/root_fire.png" alt="火靈根" style="width: 48px; height: 48px; margin-bottom: 8px;">
+                            <div style="font-weight: 700;">火靈根</div>
+                            <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 4px;">有氧運動加成</div>
+                        </div>
+                        <div class="spirit-root-btn" data-root="water" style="border-color: #3498db; color: #3498db;" onclick="selectRoot('water')">
+                            <img src="images/root_water.png" alt="水靈根" style="width: 48px; height: 48px; margin-bottom: 8px;">
+                            <div style="font-weight: 700;">水靈根</div>
+                            <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 4px;">恢復速度加成</div>
+                        </div>
+                        <div class="spirit-root-btn" data-root="earth" style="border-color: #27ae60; color: #27ae60;" onclick="selectRoot('earth')">
+                            <img src="images/root_earth.png" alt="木靈根" style="width: 48px; height: 48px; margin-bottom: 8px;">
+                            <div style="font-weight: 700;">木靈根</div>
+                            <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 4px;">力量訓練加成</div>
+                        </div>
+                        <div class="spirit-root-btn" data-root="wind" style="border-color: #9b59b6; color: #9b59b6;" onclick="selectRoot('wind')">
+                            <img src="images/root_wind.png" alt="風靈根" style="width: 48px; height: 48px; margin-bottom: 8px;">
+                            <div style="font-weight: 700;">風靈根</div>
+                            <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 4px;">敏捷運動加成</div>
+                        </div>
+                    </div>
+
+                    <button class="xian-btn" style="width: 100%;" onclick="createCharacter()">踏入仙途</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page" id="mainPage">
+        <nav style="background: rgba(15, 23, 42, 0.9); border-bottom: 1px solid rgba(212, 168, 67, 0.2); padding: 12px 24px; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px);">
+            <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 1.8rem;">🧘‍♂️</span>
+                    <span class="nav-brand-text" style="font-size: 1.3rem; font-weight: 900; color: var(--primary-gold);">仙道減重</span>
+                </div>
+                <div class="nav-scroll-container" style="gap: 8px;">
+                    <button class="nav-btn active" data-page="dashboard" onclick="switchPage('dashboard')"><span>📊</span> 修為</button>
+                    <button class="nav-btn" data-page="exercise" onclick="switchPage('exercise')"><span>⚔️</span> 修煉</button>
+                    <button class="nav-btn" data-page="talent" onclick="switchPage('talent')"><span>📜</span> 功法</button>
+                    <button class="nav-btn" data-page="pet" onclick="switchPage('pet')"><span>🐉</span> 靈寵</button>
+                    <button class="nav-btn" data-page="companion" onclick="switchPage('companion')"><span>💕</span> 道侶</button>
+                    <button class="nav-btn" data-page="ranking" onclick="switchPage('ranking')"><span>🏆</span> 天榜</button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="color: var(--primary-gold); font-weight: 700; display: none;" id="navPlayerName"></span>
+                    <button class="xian-btn-secondary" style="padding: 8px 16px; font-size: 0.9rem;" onclick="resetData()">🔄 輪迴</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="page active page-container" id="dashboardPage" style="padding: 24px; max-width: 1200px; margin: 0 auto;">
+            <div class="gold-border" style="border-radius: 20px; padding: 24px; margin-bottom: 24px; background: var(--card-bg);">
+                <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                            <img src="images/avatar_player.png" alt="玩家頭像" style="width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--primary-gold); box-shadow: 0 0 10px rgba(212, 168, 67, 0.5);" id="playerAvatar">
+                            <div>
+                                <div style="font-size: 1.5rem; font-weight: 900; color: var(--primary-gold);" id="displayPlayerName"></div>
+                                <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                                    <span class="realm-badge" id="realmBadge">✦ 凡人</span>
+                                    <span style="color: #94a3b8; font-size: 0.9rem;" id="spiritRootDisplay"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 4px;">當前修為</div>
+                        <div style="font-size: 2rem; font-weight: 900; color: var(--primary-gold);" id="totalExpDisplay">0</div>
+                        <div style="font-size: 0.9rem; color: #94a3b8;">靈力值</div>
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="color: #94a3b8; font-size: 0.9rem;">境界進度</span>
+                        <span style="color: var(--primary-gold); font-weight: 700; font-size: 0.9rem;" id="expText">0 / 100</span>
+                    </div>
+                    <div class="exp-bar-container"><div class="exp-bar" id="expBar" style="width: 0%"></div></div>
+                </div>
+            </div>
+
+            <div class="stat-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
+                <div class="stat-card"><div style="font-size: 2rem; margin-bottom: 8px;">💪</div><div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 4px;">體魄</div><div style="font-size: 1.5rem; font-weight: 900; color: var(--accent-green);" id="statStrength">10</div><div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">力量訓練</div></div>
+                <div class="stat-card"><div style="font-size: 2rem; margin-bottom: 8px;">🏃</div><div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 4px;">身法</div><div style="font-size: 1.5rem; font-weight: 900; color: var(--accent-blue);" id="statAgility">10</div><div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">有氧運動</div></div>
+                <div class="stat-card"><div style="font-size: 2rem; margin-bottom: 8px;">🧘</div><div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 4px;">靈識</div><div style="font-size: 1.5rem; font-weight: 900; color: var(--accent-purple);" id="statSpirit">10</div><div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">冥想恢復</div></div>
+                <div class="stat-card">
+                    <div style="font-size: 2rem; margin-bottom: 8px;">⚡</div><div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 4px;">耐力</div><div style="font-size: 1.5rem; font-weight: 900; color: var(--accent-red);" id="statStamina">10</div><div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">持續運動</div>
+                    <div class="exp-bar-container" style="height: 10px; margin-top: 8px;"><div class="exp-bar" id="staminaBar" style="width: 100%; background: linear-gradient(90deg, #e74c3c 0%, #f39c12 100%);"></div></div>
+                    <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;" id="currentStaminaText">100 / 100</div>
+                </div>
+            </div>
+
+            <div class="gold-border" style="border-radius: 20px; padding: 24px; margin-bottom: 24px; background: var(--card-bg);">
+                <div class="title-decoration"><h2 style="font-size: 1.5rem; font-weight: 900; color: var(--primary-gold);">📅 每日簽到</h2></div>
+                <p style="color: #94a3b8; text-align: center; margin-bottom: 16px;">連續簽到可獲得額外靈力獎勵</p>
+                <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;" id="checkInContainer"></div>
+                <div style="text-align: center; margin-top: 16px;"><button class="xian-btn" id="checkInBtn" onclick="checkIn()">今日簽到</button></div>
+            </div>
+
+            <div class="gold-border" style="border-radius: 20px; padding: 24px; margin-bottom: 24px; background: var(--card-bg);">
+                <div class="title-decoration"><h2 style="font-size: 1.5rem; font-weight: 900; color: var(--primary-gold);">🏅 成就系統</h2></div>
+                <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;" id="achievementsContainer"></div>
+            </div>
+
+            <div class="hidden-ending-hint" id="endingHint">
+                <div style="font-size: 2rem; margin-bottom: 12px;">🔮</div>
+                <h3 style="font-size: 1.3rem; color: var(--primary-gold); margin-bottom: 8px;">隱藏結局</h3>
+                <p style="color: #94a3b8;" id="endingHintText">達成特定條件可解鎖隱藏結局...</p>
+            </div>
+        </div>
+
+        <div class="page page-container" id="exercisePage" style="padding: 24px; max-width: 1200px; margin: 0 auto;">
+            <div class="title-decoration"><h2 style="font-size: 2rem; font-weight: 900; color: var(--primary-gold);">⚔️ 修煉功法</h2></div>
+            <p style="text-align: center; color: #94a3b8; margin-bottom: 32px;">選擇功法進行修煉，獲得靈力與屬性提升</p>
+
+            <div class="demon-card" style="margin-bottom: 32px;">
+                <div style="position: relative; z-index: 1;">
+                    <img src="images/boss_demon.png" alt="心魔" style="display: block; margin: 0 auto 16px; width: 180px; height: 180px; border-radius: 50%; object-fit: cover; border: 4px solid #e74c3c; box-shadow: 0 0 30px rgba(231, 76, 60, 0.8);">
+                    <h3 style="font-size: 1.8rem; color: #e74c3c; margin-bottom: 8px; font-weight: 900;">心魔試煉</h3>
+                    <p style="color: #94a3b8; margin-bottom: 16px;">擊敗心魔，獲得大量靈力與稀有獎勵</p>
+                    <div class="demon-stats" style="display: flex; gap: 16px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                        <div style="text-align: center;"><div style="font-size: 0.9rem; color: #94a3b8;">心魔等級</div><div style="font-size: 1.5rem; font-weight: 900; color: #e74c3c;" id="demonLevel">1</div></div>
+                        <div style="text-align: center;"><div style="font-size: 0.9rem; color: #94a3b8;">需要戰力</div><div style="font-size: 1.5rem; font-weight: 900; color: #e74c3c;" id="demonPower">50</div></div>
+                        <button class="xian-btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);" onclick="challengeDemon()">挑戰心魔</button>
+                    </div>
+                </div>
+            </div>
+            <div class="responsive-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px;" id="exerciseContainer"></div>
+        </div>
+
+        <div class="page page-container" id="talentPage" style="padding: 24px; max-width: 1200px; margin: 0 auto;">
+            <div class="title-decoration"><h2 style="font-size: 2rem; font-weight: 900; color: var(--primary-gold);">📜 功法天賦</h2></div>
+            <p style="text-align: center; color: #94a3b8; margin-bottom: 32px;">消耗靈力點數學習功法，提升各項能力</p>
+            <div style="text-align: center; margin-bottom: 32px;">
+                <span style="color: #94a3b8; font-size: 1.1rem;">可用靈力點數：</span>
+                <span style="font-size: 2rem; font-weight: 900; color: var(--primary-gold); text-shadow: 0 0 10px rgba(212, 168, 67, 0.5);" id="talentPoints">0</span>
+            </div>
+            <div class="responsive-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;" id="talentTreeContainer"></div>
+        </div>
+
+        <div class="page page-container" id="petPage" style="padding: 24px; max-width: 1200px; margin: 0 auto;">
+            <div class="title-decoration"><h2 style="font-size: 2rem; font-weight: 900; color: var(--primary-gold);">🐉 靈寵系統</h2></div>
+            <p style="text-align: center; color: #94a3b8; margin-bottom: 32px;">培養靈寵，升級可獲得更高修煉加成</p>
+            <div class="responsive-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;" id="petContainer"></div>
+        </div>
+
+        <div class="page page-container" id="companionPage" style="padding: 24px; max-width: 1200px; margin: 0 auto;">
+            <div class="title-decoration"><h2 style="font-size: 2rem; font-weight: 900; color: var(--primary-gold);">💕 道侶系統</h2></div>
+            <p style="text-align: center; color: #94a3b8; margin-bottom: 32px;">透過互動提升親密度，解鎖專屬CG畫面</p>
+            <div class="responsive-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;" id="companionContainer"></div>
+        </div>
+
+        <div class="page page-container" id="rankingPage" style="padding: 24px; max-width: 1200px; margin: 0 auto;">
+            <div class="title-decoration"><h2 style="font-size: 2rem; font-weight: 900; color: var(--primary-gold);">🏆 天榜排行</h2></div>
+            <p style="text-align: center; color: #94a3b8; margin-bottom: 32px;">修仙界強者排名</p>
+            <div class="gold-border" style="border-radius: 20px; padding: 24px; background: var(--card-bg);"><div id="rankingContainer"></div></div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 遊戲數據 ====================
+        const REALMS = [
+            { name: '凡人', expRequired: 100, bonus: '基礎修煉' }, { name: '煉氣期', expRequired: 300, bonus: '運動靈力+10%' },
+            { name: '築基期', expRequired: 800, bonus: '冷卻時間-10%' }, { name: '金丹期', expRequired: 2000, bonus: '雙倍靈力機率+5%' },
+            { name: '元嬰期', expRequired: 5000, bonus: '全屬性+5' }, { name: '化神期', expRequired: 12000, bonus: '心魔挑戰獎勵+20%' },
+            { name: '煉虛期', expRequired: 30000, bonus: '靈寵加成+30%' }, { name: '合體期', expRequired: 80000, bonus: '道侶雙修效率+50%' },
+            { name: '大乘期', expRequired: 200000, bonus: '全屬性+20' }, { name: '渡劫期', expRequired: 500000, bonus: '每日簽到獎勵翻倍' },
+            { name: '真仙', expRequired: 1000000, bonus: '解锁隱藏結局「羽化飛升」' }, { name: '金仙', expRequired: 2000000, bonus: '解锁隱藏結局「萬古長存」' },
+            { name: '太乙金仙', expRequired: 5000000, bonus: '解锁隱藏結局「天道合一」' }, { name: '大羅金仙', expRequired: 10000000, bonus: '解锁隱藏結局「創世之神」' },
+            { name: '混元聖人', expRequired: 99999999, bonus: '至高無上' }
+        ];
+
+        const EXERCISES = [
+            { id: 'jump', name: '跳繩術', type: 'agility', exp: 50, cooldown: 30, stamina: 5, desc: '身法修煉，提升敏捷' },
+            { id: 'squat', name: '深蹲功', type: 'strength', exp: 60, cooldown: 45, stamina: 8, desc: '體魄錘煉，強化力量' },
+            { id: 'run', name: '御風跑', type: 'agility', exp: 80, cooldown: 60, stamina: 10, desc: '身法極致，大量靈力' },
+            { id: 'pushup', name: '伏魔掌', type: 'strength', exp: 70, cooldown: 40, stamina: 7, desc: '上肢修煉，力量精進' },
+            { id: 'meditate', name: '冥想訣', type: 'spirit', exp: 40, cooldown: 20, stamina: 0, desc: '靈識修煉，恢復耐力' },
+            { id: 'yoga', name: '柔骨術', type: 'agility', exp: 55, cooldown: 35, stamina: 6, desc: '柔韌修煉，身法提升' },
+            { id: 'plank', name: '金鐘罩', type: 'strength', exp: 65, cooldown: 50, stamina: 8, desc: '核心修煉，體魄強化' },
+            { id: 'burpee', name: '爆靈術', type: 'strength', exp: 100, cooldown: 90, stamina: 15, desc: '高階功法，大量靈力' },
+            { id: 'swim', name: '游龍訣', type: 'agility', exp: 90, cooldown: 75, stamina: 12, desc: '全身修煉，極致身法' },
+            { id: 'cycle', name: '御劍術', type: 'agility', exp: 75, cooldown: 60, stamina: 10, desc: '耐力修煉，身法精進' }
+        ];
+
+        const TALENTS = {
+            strength: [
+                { id: 's1', name: '鐵骨', emoji: '🦴', cost: 100, effect: '體魄+2', level: 1 },
+                { id: 's2', name: '銅皮', emoji: '🛡️', cost: 200, effect: '體魄+3', level: 2, req: 's1' },
+                { id: 's3', name: '金身', emoji: '✨', cost: 500, effect: '體魄+5', level: 3, req: 's2' },
+                { id: 's4', name: '不滅', emoji: '🔥', cost: 1000, effect: '體魄+10', level: 4, req: 's3' }
+            ],
+            agility: [
+                { id: 'a1', name: '輕身', emoji: '🍃', cost: 100, effect: '身法+2', level: 1 },
+                { id: 'a2', name: '踏風', emoji: '💨', cost: 200, effect: '身法+3', level: 2, req: 'a1' },
+                { id: 'a3', name: '瞬影', emoji: '⚡', cost: 500, effect: '身法+5', level: 3, req: 'a2' },
+                { id: 'a4', name: '無蹤', emoji: '👻', cost: 1000, effect: '身法+10', level: 4, req: 'a3' }
+            ],
+            spirit: [
+                { id: 'p1', name: '凝神', emoji: '👁️', cost: 100, effect: '靈識+2', level: 1 },
+                { id: 'p2', name: '通靈', emoji: '🔮', cost: 200, effect: '靈識+3', level: 2, req: 'p1' },
+                { id: 'p3', name: '神識', emoji: '🌟', cost: 500, effect: '靈識+5', level: 3, req: 'p2' },
+                { id: 'p4', name: '天道', emoji: '☯️', cost: 1000, effect: '靈識+10', level: 4, req: 'p3' }
+            ],
+            stamina: [
+                { id: 'e1', name: '吐納', emoji: '🌬️', cost: 100, effect: '耐力+2', level: 1 },
+                { id: 'e2', name: '歸元', emoji: '♻️', cost: 200, effect: '耐力+3', level: 2, req: 'e1' },
+                { id: 'e3', name: '生生不息', emoji: '🌱', cost: 500, effect: '耐力+5', level: 3, req: 'e2' },
+                { id: 'e4', name: '無盡', emoji: '∞', cost: 1000, effect: '耐力+10', level: 4, req: 'e3' }
+            ]
+        };
+
+        const PETS = [
+            { id: 'p1', name: '小火狐', unlockRealm: 0, bonus: '火靈根運動+10%', cost: 0, desc: '初始靈寵，陪伴修煉' },
+            { id: 'p2', name: '青鸞', unlockRealm: 2, bonus: '身法+5', cost: 500, desc: '築基期可召喚' },
+            { id: 'p3', name: '玄龜', unlockRealm: 3, bonus: '體魄+5', cost: 800, desc: '金丹期可召喚' },
+            { id: 'p4', name: '麒麟', unlockRealm: 5, bonus: '全屬性+3', cost: 2000, desc: '化神期可召喚' },
+            { id: 'p5', name: '鳳凰', unlockRealm: 7, bonus: '靈力獲取+20%', cost: 5000, desc: '合體期可召喚' },
+            { id: 'p6', name: '神龍', unlockRealm: 9, bonus: '全屬性+10', cost: 10000, desc: '渡劫期可召喚' }
+        ];
+
+        const COMPANIONS = [
+            { id: 'c1', name: '小師妹', unlockRealm: 1, bonus: '雙修靈力+15%', cost: 300, desc: '煉氣期可結交', maxAffection: 100, cgs: ['初識', '月下論道', '結為道侶'] },
+            { id: 'c2', name: '劍仙子', unlockRealm: 3, bonus: '身法+8', cost: 800, desc: '金丹期可結交', maxAffection: 150, cgs: ['比武切磋', '劍舞飛花', '雙劍合璧'] },
+            { id: 'c3', name: '丹仙子', unlockRealm: 4, bonus: '恢復速度+20%', cost: 1500, desc: '元嬰期可結交', maxAffection: 200, cgs: ['求藥問診', '煉丹秘術', '同源共生'] },
+            { id: 'c4', name: '魔道聖女', unlockRealm: 6, bonus: '心魔獎勵+30%', cost: 3000, desc: '煉虛期可結交', maxAffection: 250, cgs: ['幻境相遇', '冰釋前嫌', '神魔共舞'] },
+            { id: 'c5', name: '九天玄女', unlockRealm: 8, bonus: '全屬性+15', cost: 8000, desc: '大乘期可結交', maxAffection: 300, cgs: ['天界謁見', '凡間遊歷', '天人合一'] },
+            { id: 'c6', name: '女媧後人', unlockRealm: 10, bonus: '靈力獲取+50%', cost: 20000, desc: '真仙可結交', maxAffection: 500, cgs: ['尋蹤溯古', '補天濟世', '創世之緣'] }
+        ];
+
+        const ACHIEVEMENTS = [
+            { id: 'first', name: '初入仙途', emoji: '🌟', desc: '完成第一次運動', condition: 'totalExercises >= 1' },
+            { id: 'ten', name: '十日苦修', emoji: '🔥', desc: '完成10次運動', condition: 'totalExercises >= 10' },
+            { id: 'hundred', name: '百日築基', emoji: '💯', desc: '完成100次運動', condition: 'totalExercises >= 100' },
+            { id: 'realm2', name: '煉氣成仙', emoji: '☁️', desc: '達到煉氣期', condition: 'realm >= 1' },
+            { id: 'realm5', name: '化神之境', emoji: '👑', desc: '達到化神期', condition: 'realm >= 5' },
+            { id: 'realm10', name: '真仙降世', emoji: '✨', desc: '達到真仙', condition: 'realm >= 10' },
+            { id: 'demon1', name: '斬魔證道', emoji: '⚔️', desc: '擊敗第一次心魔', condition: 'demonsDefeated >= 1' },
+            { id: 'demon10', name: '魔界剋星', emoji: '🗡️', desc: '擊敗10次心魔', condition: 'demonsDefeated >= 10' },
+            { id: 'streak7', name: '七日閉關', emoji: '📅', desc: '連續簽到7天', condition: 'maxStreak >= 7' },
+            { id: 'streak30', name: '月圓之夜', emoji: '🌕', desc: '連續簽到30天', condition: 'maxStreak >= 30' },
+            { id: 'talent10', name: '功法大成', emoji: '📜', desc: '學習10個功法', condition: 'talentsLearned >= 10' },
+            { id: 'pet3', name: '靈寵大師', emoji: '🐾', desc: '擁有3個靈寵', condition: 'petsOwned >= 3' },
+            { id: 'companion2', name: '情緣初開', emoji: '💕', desc: '結交2位道侶', condition: 'companionsOwned >= 2' },
+            { id: 'companion6', name: '後宮佳麗', emoji: '👑', desc: '結交所有道侶', condition: 'companionsOwned >= 6' },
+            { id: 'hidden1', name: '隱世高人', emoji: '🏔️', desc: '解鎖隱藏結局', condition: 'endingsUnlocked >= 1' }
+        ];
+
+        const RANKING_DATA = [
+            { name: '無極天尊', realm: 14, exp: 8500000, avatar: '👑' }, { name: '紫霄真人', realm: 13, exp: 4200000, avatar: '⚡' },
+            { name: '青雲劍仙', realm: 12, exp: 1800000, avatar: '⚔️' }, { name: '玄陰老祖', realm: 11, exp: 950000, avatar: '🌙' },
+            { name: '紅塵仙子', realm: 10, exp: 520000, avatar: '💃' }, { name: '金剛羅漢', realm: 9, exp: 280000, avatar: '🛡️' },
+            { name: '逍遙散人', realm: 8, exp: 150000, avatar: '🍃' }, { name: '烈火真人', realm: 7, exp: 85000, avatar: '🔥' },
+            { name: '寒冰仙子', realm: 6, exp: 45000, avatar: '❄️' }, { name: '鐵掌幫主', realm: 5, exp: 22000, avatar: '👊' }
+        ];
+
+        // ==================== 遊戲狀態 ====================
+        let gameState = {
+            playerName: '', spiritRoot: '', realm: 0, exp: 0, totalExp: 0,
+            strength: 10, agility: 10, spirit: 10, stamina: 10,
+            currentStamina: 100, maxStamina: 100, talentPoints: 0, totalExercises: 0,
+            demonsDefeated: 0, demonsLevel: 1, checkInStreak: 0, maxStreak: 0, lastCheckIn: null, checkInDays: [],
+            unlockedTalents: [], ownedPets: [], activePet: null, petLevels: {}, petInteractionCooldown: {},
+            ownedCompanions: [], companionAffection: {}, companionCooldown: {},
+            achievements: [], endingsUnlocked: 0, cooldowns: {}
+        };
+
+        let selectedRoot = null;
+
+        // ==================== 初始化 ====================
+        function init() {
+            createStars();
+            loadGame();
+            if (gameState.playerName) showMainPage();
+            startGlobalTimer();
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem('xianxiuFitness');
+            if (saved) {
+                const loadedState = JSON.parse(saved);
+                gameState = { ...gameState, ...loadedState };
+                if (!gameState.petLevels) gameState.petLevels = {};
+                if (!gameState.petInteractionCooldown) gameState.petInteractionCooldown = {};
+                if (!gameState.companionCooldown) gameState.companionCooldown = {};
+                if (typeof gameState.talentPoints !== 'number') gameState.talentPoints = 0;
+                if (!Array.isArray(gameState.unlockedTalents)) gameState.unlockedTalents = [];
+            }
+        }
+
+        function createStars() {
+            const container = document.getElementById('starsContainer');
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%'; star.style.top = Math.random() * 100 + '%';
+                star.style.width = Math.random() * 3 + 1 + 'px'; star.style.height = star.style.width;
+                star.style.setProperty('--duration', Math.random() * 3 + 2 + 's');
+                star.style.setProperty('--opacity', Math.random() * 0.7 + 0.3);
+                container.appendChild(star);
+            }
+        }
+
+        function createCharacter() {
+            const name = document.getElementById('playerName').value.trim();
+            if (!name) return showNotification('錯誤', '請輸入道號');
+            if (!selectedRoot) return showNotification('錯誤', '請選擇靈根');
+            gameState.playerName = name; gameState.spiritRoot = selectedRoot;
+            switch(selectedRoot) {
+                case 'fire': gameState.agility += 5; break; case 'water': gameState.spirit += 5; break;
+                case 'earth': gameState.strength += 5; break; case 'wind': gameState.agility += 3; gameState.stamina += 3; break;
+            }
+            saveGame(); showMainPage(); showNotification('歡迎', `道友 ${name}，歡迎踏入仙途！`);
+        }
+
+        function selectRoot(root) {
+            selectedRoot = root;
+            document.querySelectorAll('.spirit-root-btn').forEach(btn => btn.classList.remove('selected'));
+            document.querySelector(`[data-root="${root}"]`).classList.add('selected');
+        }
+
+        function showMainPage() {
+            document.getElementById('loginPage').classList.remove('active');
+            document.getElementById('mainPage').classList.add('active');
+            document.getElementById('navPlayerName').textContent = gameState.playerName;
+            document.getElementById('navPlayerName').style.display = 'block'; // 顯示玩家名稱
+            switchBg('dashboard'); updateAllUI();
+        }
+
+        function switchPage(page) {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-page="${page}"]`).classList.add('active');
+            document.querySelectorAll('#mainPage > .page').forEach(p => p.classList.remove('active'));
+            document.getElementById(page + 'Page').classList.add('active');
+            switchBg(page); updateAllUI();
+            window.scrollTo(0, 0); // 切換頁面時回到頂部
+        }
+
+        function switchBg(page) {
+            document.querySelectorAll('.page-bg').forEach(bg => bg.classList.remove('active'));
+            const bgMap = { 'dashboard': 'bgDashboard', 'exercise': 'bgExercise', 'talent': 'bgTalent', 'pet': 'bgPet', 'companion': 'bgCompanion', 'ranking': 'bgRanking' };
+            if (bgMap[page]) document.getElementById(bgMap[page]).classList.add('active');
+        }
+
+        function updateAllUI() {
+            updateDashboard(); renderExercises(); renderTalents(); renderPets(); renderCompanions(); renderRanking(); renderCheckIn(); renderAchievements(); updateEndingHint();
+        }
+
+        // ==================== 修為面板 ====================
+        function updateDashboard() {
+            document.getElementById('displayPlayerName').textContent = gameState.playerName;
+            document.getElementById('realmBadge').textContent = '✦ ' + REALMS[gameState.realm].name;
+            document.getElementById('spiritRootDisplay').textContent = getSpiritRootName(gameState.spiritRoot);
+            document.getElementById('totalExpDisplay').textContent = gameState.totalExp.toLocaleString();
+            const nextRealm = REALMS[gameState.realm + 1];
+            const progress = nextRealm ? (gameState.exp / nextRealm.expRequired * 100) : 100;
+            document.getElementById('expText').textContent = `${gameState.exp} / ${nextRealm ? nextRealm.expRequired : '∞'}`;
+            document.getElementById('expBar').style.width = progress + '%';
+            document.getElementById('statStrength').textContent = gameState.strength;
+            document.getElementById('statAgility').textContent = gameState.agility;
+            document.getElementById('statSpirit').textContent = gameState.spirit;
+            document.getElementById('statStamina').textContent = gameState.stamina;
+            const staminaPercent = (gameState.currentStamina / gameState.maxStamina) * 100;
+            if (document.getElementById('staminaBar')) document.getElementById('staminaBar').style.width = staminaPercent + '%';
+            if (document.getElementById('currentStaminaText')) document.getElementById('currentStaminaText').textContent = `${gameState.currentStamina} / ${gameState.maxStamina}`;
+            document.getElementById('talentPoints').textContent = gameState.talentPoints;
+            document.getElementById('demonLevel').textContent = gameState.demonsLevel;
+            document.getElementById('demonPower').textContent = gameState.demonsLevel * 50;
+        }
+
+        function getSpiritRootName(root) { const names = { fire: '🔥 火靈根', water: '💧 水靈根', earth: '🌿 木靈根', wind: '💨 風靈根' }; return names[root] || ''; }
+
+        // ==================== 運動系統 ====================
+        function renderExercises() {
+            const container = document.getElementById('exerciseContainer');
+            container.innerHTML = '';
+            EXERCISES.forEach(exercise => {
+                const isCooldown = gameState.cooldowns[exercise.id] && gameState.cooldowns[exercise.id] > Date.now();
+                const remainingTime = isCooldown ? Math.ceil((gameState.cooldowns[exercise.id] - Date.now()) / 1000) : 0;
+                const canAfford = gameState.currentStamina >= exercise.stamina;
+                const btn = document.createElement('button');
+                btn.className = 'exercise-btn' + (isCooldown || !canAfford ? ' cooldown' : '');
+                btn.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 24px; width: 100%;">
+                        <div class="exercise-img-wrapper" style="width: 180px; height: 180px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); border-radius: 12px; overflow: hidden;">
+                            <img src="images/${exercise.id}.png" alt="${exercise.name}" style="width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 10px rgba(212, 168, 67, 0.5));">
+                        </div>
+                        <div style="flex: 1; padding: 10px 0;">
+                            <div style="font-size: 1.6rem; font-weight: 900; color: var(--primary-gold); margin-bottom: 8px;">${exercise.name}</div>
+                            <div style="font-size: 1rem; color: #94a3b8; margin-bottom: 16px;">${exercise.desc}</div>
+                            <div style="display: flex; gap: 16px; font-size: 1.1rem; font-weight: 700;">
+                                <span style="color: var(--primary-gold);">⚡ ${exercise.exp} 靈力</span>
+                                <span style="color: ${canAfford ? '#27ae60' : '#e74c3c'};">🔋 ${exercise.stamina} 耐力</span>
+                            </div>
+                        </div>
+                    </div>
+                    ${isCooldown ? `<div class="cooldown-overlay">⏱️ ${remainingTime}s</div>` : ''}
+                    ${!canAfford && !isCooldown ? `<div class="cooldown-overlay">耐力不足</div>` : ''}`;
+                if (!isCooldown && canAfford) btn.onclick = (e) => doExercise(exercise, e);
+                container.appendChild(btn);
+            });
+        }
+
+        function doExercise(exercise, event) {
+            if (gameState.currentStamina < exercise.stamina) return showNotification('警告', '耐力不足，請先冥想恢復');
+            let expGain = exercise.exp;
+            if (gameState.spiritRoot === 'fire' && (exercise.type === 'agility' || exercise.type === 'strength')) expGain = Math.floor(expGain * 1.2);
+            if (gameState.spiritRoot === 'earth' && exercise.type === 'strength') expGain = Math.floor(expGain * 1.3);
+            if (gameState.spiritRoot === 'wind' && exercise.type === 'agility') expGain = Math.floor(expGain * 1.3);
+            if (gameState.realm >= 1) expGain = Math.floor(expGain * 1.1);
+            if (gameState.activePet) {
+                const pet = PETS.find(p => p.id === gameState.activePet);
+                if (pet && pet.bonus.includes('靈力')) {
+                    const petLevel = gameState.petLevels[gameState.activePet] || 1;
+                    expGain = Math.floor(expGain * (1.2 + (petLevel - 1) * 0.02));
+                }
+            }
+            if (gameState.realm >= 3 && Math.random() < 0.05) { expGain *= 2; showNotification('暴擊', '雙倍靈力！'); }
+            gameState.currentStamina -= exercise.stamina;
+            if (exercise.type === 'spirit') gameState.currentStamina = Math.min(gameState.maxStamina, gameState.currentStamina + 15);
+            switch(exercise.type) { case 'strength': gameState.strength += 1; break; case 'agility': gameState.agility += 1; break; case 'spirit': gameState.spirit += 1; break; }
+            gameState.exp += expGain; gameState.totalExp += expGain; gameState.totalExercises++;
+            let cooldownTime = exercise.cooldown * 1000;
+            if (gameState.realm >= 2) cooldownTime = Math.floor(cooldownTime * 0.9);
+            gameState.cooldowns[exercise.id] = Date.now() + cooldownTime;
+            showFloatText(event.clientX, event.clientY, `+${expGain} 靈力`, '#d4a843');
+            createParticles(event.clientX, event.clientY);
+            checkBreakthrough(); checkAchievements(); updateDashboard(); renderExercises(); saveGame();
+        }
+
+        // ==================== 心魔挑戰 ====================
+        function challengeDemon() {
+            const requiredPower = gameState.demonsLevel * 50;
+            const playerPower = gameState.strength + gameState.agility + gameState.spirit + gameState.stamina;
+            if (playerPower < requiredPower) return showNotification('失敗', `戰力不足！需要 ${requiredPower}，當前 ${playerPower}`);
+            const winChance = Math.min(0.9, playerPower / (requiredPower * 1.5));
+            if (Math.random() < winChance) {
+                let expGain = gameState.demonsLevel * 200;
+                gameState.demonsDefeated++; gameState.demonsLevel++;
+                gameState.talentPoints += 2; 
+                showNotification('勝利', `擊敗心魔！獲得 ${expGain} 靈力與 2 點天賦點數`);
+                showFloatText(window.innerWidth / 2, window.innerHeight / 2, `+${expGain} 靈力`, '#e74c3c');
+                if (gameState.ownedCompanions.length > 0) expGain += Math.floor(expGain * gameState.ownedCompanions.length * 0.1);
+                gameState.exp += expGain; gameState.totalExp += expGain;
+                checkBreakthrough(); checkAchievements();
+            } else { showNotification('失敗', '心魔太強，請提升修為後再來'); }
+            updateDashboard(); saveGame();
+        }
+
+        // ==================== 境界突破 ====================
+        function checkBreakthrough() {
+            let nextRealm = REALMS[gameState.realm + 1];
+            if (!nextRealm) return;
+            let hasBroken = false;
+            while (nextRealm && gameState.exp >= nextRealm.expRequired) {
+                gameState.exp -= nextRealm.expRequired; gameState.realm++; gameState.talentPoints += 5; hasBroken = true;
+                if (gameState.realm === 4) { gameState.strength += 5; gameState.agility += 5; gameState.spirit += 5; gameState.stamina += 5; }
+                if (gameState.realm === 8) { gameState.strength += 20; gameState.agility += 20; gameState.spirit += 20; gameState.stamina += 20; }
+                if (gameState.realm >= 10) { gameState.endingsUnlocked = Math.max(gameState.endingsUnlocked, gameState.realm - 9); updateEndingHint(); }
+                nextRealm = REALMS[gameState.realm + 1];
+            }
+            if (hasBroken) {
+                document.getElementById('newRealmName').textContent = REALMS[gameState.realm].name;
+                document.getElementById('realmBonus').textContent = '獲得加成：' + REALMS[gameState.realm].bonus;
+                document.getElementById('breakthroughModal').classList.add('active');
+                document.body.classList.add('breakthrough-anim');
+                setTimeout(() => document.body.classList.remove('breakthrough-anim'), 2000);
+                checkAchievements(); saveGame();
+            }
+        }
+        function closeModal() { document.getElementById('breakthroughModal').classList.remove('active'); updateDashboard(); }
+
+        // ==================== 天賦系統 ====================
+        function renderTalents() {
+            const container = document.getElementById('talentTreeContainer');
+            container.innerHTML = '';
+            const categories = [
+                { key: 'strength', name: '體魄', color: '#27ae60', icon: '💪' }, 
+                { key: 'agility', name: '身法', color: '#2980b9', icon: '🏃' },
+                { key: 'spirit', name: '靈識', color: '#8e44ad', icon: '🧘' }, 
+                { key: 'stamina', name: '耐力', color: '#c0392b', icon: '⚡' }
+            ];
+
+            categories.forEach(cat => {
+                const catDiv = document.createElement('div');
+                catDiv.style.cssText = 'background: var(--card-bg); border: 1px solid rgba(212, 168, 67, 0.2); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 16px;';
+                
+                let html = `<div style="text-align: center; margin-bottom: 12px; border-bottom: 1px solid rgba(212, 168, 67, 0.2); padding-bottom: 12px;">
+                    <div style="font-size: 2.5rem; margin-bottom: 8px;">${cat.icon}</div>
+                    <div style="font-size: 1.4rem; font-weight: 900; color: ${cat.color}; text-shadow: 0 0 10px ${cat.color}50;">${cat.name}天賦</div>
+                </div>`;
+
+                TALENTS[cat.key].forEach((talent, index) => {
+                    const isUnlocked = gameState.unlockedTalents.includes(talent.id);
+                    const canUnlock = !isUnlocked && gameState.talentPoints >= talent.cost && (!talent.req || gameState.unlockedTalents.includes(talent.req));
+                    const isLocked = !isUnlocked && !canUnlock;
+                    
+                    html += `
+                    <div style="display: flex; align-items: center; gap: 16px; padding: 16px; background: rgba(15, 23, 42, 0.8); border-radius: 12px; border: 2px solid ${isUnlocked ? cat.color : 'rgba(255,255,255,0.05)'}; opacity: ${isLocked ? 0.4 : 1}; transition: all 0.3s ease;">
+                        <div style="width: 50px; height: 50px; border-radius: 50%; background: ${isUnlocked ? cat.color : '#1e293b'}; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: ${isUnlocked ? `0 0 15px ${cat.color}80` : 'none'}; flex-shrink: 0;">${talent.emoji}</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; color: ${isUnlocked ? cat.color : '#e2e8f0'}; font-size: 1.1rem; margin-bottom: 4px;">${talent.name}</div>
+                            <div style="font-size: 0.9rem; color: #94a3b8;">${talent.effect}</div>
+                        </div>
+                        ${!isUnlocked ? `<button class="xian-btn-secondary" style="padding: 8px 16px; font-size: 0.9rem; flex-shrink: 0;" onclick="learnTalent('${talent.id}', '${cat.key}')" ${!canUnlock ? 'disabled' : ''}>消耗 ${talent.cost} 點</button>` : '<span style="color: #27ae60; font-size: 1.2rem; flex-shrink: 0;">✓</span>'}
+                    </div>`;
+                });
+                
+                catDiv.innerHTML = html; 
+                container.appendChild(catDiv);
+            });
+            
+            document.getElementById('talentPoints').textContent = gameState.talentPoints;
+        }
+
+        function learnTalent(talentId, category) {
+            const talent = TALENTS[category].find(t => t.id === talentId);
+            if (!talent) return;
+            if (gameState.talentPoints < talent.cost) return showNotification('錯誤', '靈力點數不足');
+            if (talent.req && !gameState.unlockedTalents.includes(talent.req)) return showNotification('錯誤', '需先學習前置天賦');
+            
+            gameState.talentPoints -= talent.cost; 
+            gameState.unlockedTalents.push(talentId);
+            
+            const effectStr = talent.effect; 
+            const match = effectStr.match(/\+(\d+)/);
+            if (match) {
+                const val = parseInt(match[1]);
+                if (effectStr.includes('體魄')) gameState.strength += val;
+                else if (effectStr.includes('身法')) gameState.agility += val;
+                else if (effectStr.includes('靈識')) gameState.spirit += val;
+                else if (effectStr.includes('耐力')) gameState.stamina += val;
+            }
+            
+            showNotification('學習成功', `學會了 ${talent.name}！${talent.effect}`);
+            renderTalents(); updateDashboard(); checkAchievements(); saveGame();
+        }
+
+        // ==================== 靈寵系統 ====================
+        function renderPets() {
+            const container = document.getElementById('petContainer');
+            container.innerHTML = '';
+            PETS.forEach(pet => {
+                const isOwned = gameState.ownedPets.includes(pet.id);
+                const isActive = gameState.activePet === pet.id;
+                const canUnlock = gameState.realm >= pet.unlockRealm && !isOwned;
+                const canAfford = gameState.exp >= pet.cost;
+                const level = gameState.petLevels[pet.id] || 1;
+                const upgradeCost = level * 500;
+                const teaseCd = gameState.petInteractionCooldown[pet.id] && gameState.petInteractionCooldown[pet.id] > Date.now();
+                const teaseTimeLeft = teaseCd ? Math.ceil((gameState.petInteractionCooldown[pet.id] - Date.now())/1000) : 0;
+
+                const petDiv = document.createElement('div');
+                petDiv.className = 'pet-card' + (!isOwned ? ' locked' : '');
+                petDiv.style.cssText = 'background: var(--card-bg); border: 2px solid ' + (isActive ? 'var(--primary-gold)' : 'rgba(212, 168, 67, 0.2)') + '; border-radius: 20px; padding: 24px; text-align: center; transition: all 0.3s ease;';
+                let html = `<img src="images/${pet.id}.png" class="pet-img" alt="${pet.name}" onerror="this.onerror=null;this.src='images/default.png';">
+                <div style="font-size: 1.2rem; font-weight: 900; color: var(--primary-gold); margin-bottom: 4px;">${pet.name} ${isOwned ? `<span style="font-size:0.9rem; color:#aaa;">Lv.${level}</span>` : ''}</div>
+                <div style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 8px;">${pet.desc}</div>
+                <div style="font-size: 0.85rem; color: #27ae60; margin-bottom: 12px;">${pet.bonus} ${pet.bonus.includes('靈力') ? `(等級加成+${(level-1)*2}%)` : ''}</div>`;
+                if (isOwned) {
+                    html += `<button class="xian-btn${isActive ? '-secondary' : ''}" style="width: 100%; margin-bottom: 8px;" onclick="togglePet('${pet.id}')">${isActive ? '✓ 已出戰' : '出戰'}</button>`;
+                    html += `<div class="interaction-grid"><button class="interaction-btn" onclick="levelUpPet('${pet.id}')" ${gameState.exp < upgradeCost ? 'disabled' : ''}>⬆️ 升級 (${upgradeCost})</button><button class="interaction-btn" onclick="teasePet('${pet.id}')" ${teaseCd ? 'disabled' : ''}>${teaseCd ? `休息(${teaseTimeLeft}s)` : '🍖 逗弄'}</button></div>`;
+                } else if (canUnlock && canAfford) { html += `<button class="xian-btn" style="width: 100%;" onclick="buyPet('${pet.id}')">召喚 (${pet.cost} 靈力)</button>`; }
+                else if (canUnlock && !canAfford) { html += `<div style="color: #e74c3c; font-size: 0.9rem;">靈力不足</div>`; }
+                else { html += `<div style="color: #64748b; font-size: 0.9rem;">需要境界: ${REALMS[pet.unlockRealm].name}</div>`; }
+                petDiv.innerHTML = html; container.appendChild(petDiv);
+            });
+        }
+
+        function togglePet(petId) { gameState.activePet = gameState.activePet === petId ? null : petId; renderPets(); saveGame(); }
+        function buyPet(petId) {
+            const pet = PETS.find(p => p.id === petId);
+            if (!pet || gameState.exp < pet.cost) return showNotification('錯誤', '靈力不足');
+            gameState.exp -= pet.cost; gameState.ownedPets.push(petId); gameState.petLevels[petId] = 1; gameState.activePet = petId;
+            showNotification('召喚成功', `成功召喚 ${pet.name}！`);
+            renderPets(); updateDashboard(); checkAchievements(); saveGame();
+        }
+        function levelUpPet(petId) {
+            const level = gameState.petLevels[petId] || 1; const cost = level * 500;
+            if (gameState.exp < cost) return showNotification('錯誤', '靈力不足');
+            gameState.exp -= cost; gameState.petLevels[petId] = level + 1;
+            const pet = PETS.find(p => p.id === petId);
+            showNotification('升級成功', `${pet.name} 升級至 Lv.${level + 1}！加成提升！`);
+            renderPets(); updateDashboard(); saveGame();
+        }
+        function teasePet(petId) {
+            const now = Date.now();
+            if (gameState.petInteractionCooldown[petId] && gameState.petInteractionCooldown[petId] > now) return;
+            const gain = 10 + Math.floor(Math.random() * 20);
+            gameState.exp += gain; gameState.totalExp += gain;
+            gameState.petInteractionCooldown[petId] = now + 30000;
+            const pet = PETS.find(p => p.id === petId);
+            showNotification('逗弄成功', `與 ${pet.name} 玩耍，獲得 ${gain} 靈力！`);
+            showFloatText(window.innerWidth / 2, window.innerHeight / 2, `+${gain} 靈力`, '#d4a843');
+            renderPets(); updateDashboard(); saveGame();
+        }
+
+        // ==================== 道侶系統 ====================
+        function renderCompanions() {
+            const container = document.getElementById('companionContainer');
+            container.innerHTML = '';
+
+            COMPANIONS.forEach(companion => {
+                const isOwned = gameState.ownedCompanions.includes(companion.id);
+                const canUnlock = gameState.realm >= companion.unlockRealm && !isOwned;
+                const canAfford = gameState.exp >= companion.cost;
+                const affection = gameState.companionAffection[companion.id] || 0;
+                const talkCd = gameState.companionCooldown[companion.id] && gameState.companionCooldown[companion.id] > Date.now();
+                const talkTimeLeft = talkCd ? Math.ceil((gameState.companionCooldown[companion.id] - Date.now())/1000) : 0;
+
+                const compDiv = document.createElement('div');
+                compDiv.className = 'companion-card' + (!isOwned ? ' locked' : '');
+
+                let html = `<img src="images/${companion.id}.png" class="companion-img" alt="${companion.name}" onerror="this.onerror=null;this.src='images/default.png';">
+                <div style="font-size: 1.2rem; font-weight: 900; color: var(--primary-gold); margin-bottom: 4px;">${companion.name}</div>
+                <div style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 4px;">${companion.desc}</div>
+                <div style="font-size: 0.85rem; color: #e74c3c; margin-bottom: 12px;">${companion.bonus}</div>`;
+
+                if (isOwned) {
+                    html += `<div style="margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                            <span style="color: #94a3b8;">親密度</span>
+                            <span style="color: var(--primary-gold);">${affection} / ${companion.maxAffection}</span>
+                        </div>
+                        <div class="affection-bar"><div class="affection-fill" style="width: ${(affection / companion.maxAffection * 100)}%"></div></div>
+                    </div>`;
+
+                    const cgThresholds = [0, Math.floor(companion.maxAffection * 0.4), Math.floor(companion.maxAffection * 0.8)];
+                    html += `<div class="cg-gallery">`;
+                    companion.cgs.forEach((cgName, index) => {
+                        const unlocked = affection >= cgThresholds[index];
+                        if (unlocked) {
+                            html += `<div class="cg-thumb" onclick="openCGViewer('${companion.id}', ${index}, '${companion.name}', '${cgName}')">
+                                <img src="images/${companion.id}_cg${index + 1}.jpg" alt="${cgName}" onerror="this.onerror=null;this.src='images/default.png';">
+                            </div>`;
+                        } else {
+                            html += `<div class="cg-thumb locked" title="親密度需達到 ${cgThresholds[index]}"></div>`;
+                        }
+                    });
+                    html += `</div>`;
+
+                    html += `<div class="interaction-grid">
+                        <button class="interaction-btn" onclick="interactCompanion('${companion.id}', 'dual')">💕 雙修(+20)</button>
+                        <button class="interaction-btn" onclick="interactCompanion('${companion.id}', 'gift')" ${gameState.exp < 1000 ? 'disabled' : ''}>🎁 贈禮(1k)</button>
+                        <button class="interaction-btn" style="grid-column: span 2;" onclick="interactCompanion('${companion.id}', 'talk')" ${talkCd ? 'disabled' : ''}>${talkCd ? `閉關中(${talkTimeLeft}s)` : '💬 論道(獲靈力,+10好感)'}</button>
+                    </div>`;
+                } else if (canUnlock && canAfford) {
+                    html += `<button class="xian-btn" style="width: 100%;" onclick="buyCompanion('${companion.id}')">結交 (${companion.cost} 靈力)</button>`;
+                } else if (canUnlock && !canAfford) {
+                    html += `<div style="color: #e74c3c; font-size: 0.9rem;">靈力不足</div>`;
+                } else {
+                    html += `<div style="color: #64748b; font-size: 0.9rem;">需要境界: ${REALMS[companion.unlockRealm].name}</div>`;
+                }
+                compDiv.innerHTML = html;
+                container.appendChild(compDiv);
+            });
+        }
+
+        function openCGViewer(id, index, name, cgName) {
+            const viewer = document.getElementById('cgViewer');
+            const img = document.getElementById('cgViewerImg');
+            const title = document.getElementById('cgViewerTitle');
+            img.src = `images/${id}_cg${index + 1}.jpg`;
+            img.onerror = function() { this.onerror=null; this.src='images/default.png'; };
+            title.textContent = `${name} - ${cgName}`;
+            viewer.classList.add('active');
+        }
+
+        function closeCGViewer() {
+            document.getElementById('cgViewer').classList.remove('active');
+        }
+
+        function buyCompanion(companionId) {
+            const companion = COMPANIONS.find(c => c.id === companionId);
+            if (!companion || gameState.exp < companion.cost) return showNotification('錯誤', '靈力不足');
+            gameState.exp -= companion.cost; gameState.ownedCompanions.push(companionId); gameState.companionAffection[companionId] = 0;
+            showNotification('結交成功', `成功結交 ${companion.name}！`);
+            renderCompanions(); updateDashboard(); checkAchievements(); saveGame();
+        }
+
+        function interactCompanion(companionId, action) {
+            const companion = COMPANIONS.find(c => c.id === companionId);
+            if (!companion) return;
+            const currentAff = gameState.companionAffection[companionId] || 0;
+            const now = Date.now();
+
+            if (action === 'dual') {
+                if (currentAff >= companion.maxAffection) return showNotification('提示', '親密度已滿！');
+                gameState.companionAffection[companionId] = Math.min(companion.maxAffection, currentAff + 20);
+                const bonusExp = 50 * gameState.ownedCompanions.length;
+                gameState.exp += bonusExp; gameState.totalExp += bonusExp;
+                showNotification('雙修', `與 ${companion.name} 雙修，獲得 ${bonusExp} 靈力，親密度 +20`);
+                showFloatText(window.innerWidth / 2, window.innerHeight / 2, `+${bonusExp} 靈力`, '#e74c3c');
+            } else if (action === 'gift') {
+                if (currentAff >= companion.maxAffection) return showNotification('提示', '親密度已滿！');
+                if (gameState.exp < 1000) return showNotification('錯誤', '靈力不足');
+                gameState.exp -= 1000;
+                gameState.companionAffection[companionId] = Math.min(companion.maxAffection, currentAff + 50);
+                showNotification('贈禮', `贈送 ${companion.name} 靈寶，親密度大幅提升 +50`);
+            } else if (action === 'talk') {
+                if (gameState.companionCooldown[companionId] && gameState.companionCooldown[companionId] > now) return;
+                const gain = 100 + Math.floor(Math.random() * 50);
+                gameState.exp += gain; gameState.totalExp += gain;
+                gameState.companionAffection[companionId] = Math.min(companion.maxAffection, currentAff + 10);
+                gameState.companionCooldown[companionId] = now + 30000;
+                showNotification('論道', `與 ${companion.name} 論道，獲得 ${gain} 靈力，親密度 +10`);
+                showFloatText(window.innerWidth / 2, window.innerHeight / 2, `+${gain} 靈力`, '#d4a843');
+            }
+
+            const newAff = gameState.companionAffection[companionId];
+            const thresholds = [0, Math.floor(companion.maxAffection * 0.4), Math.floor(companion.maxAffection * 0.8)];
+            if (action === 'dual' || action === 'gift' || action === 'talk') {
+                for(let i=0; i<thresholds.length; i++){
+                    if(currentAff < thresholds[i] && newAff >= thresholds[i]){
+                        showNotification('CG 解鎖', `解鎖了 ${companion.name} 的專屬CG：${companion.cgs[i]}`);
+                    }
+                }
+            }
+
+            renderCompanions(); updateDashboard(); checkBreakthrough(); saveGame();
+        }
+
+        // ==================== 排行榜 ====================
+        function renderRanking() {
+            const container = document.getElementById('rankingContainer');
+            container.innerHTML = '';
+            const playerRank = { name: gameState.playerName, realm: gameState.realm, exp: gameState.totalExp, avatar: `<img src="images/avatar_player.png" style="width: 32px; height: 32px; border-radius: 50%; vertical-align: middle;">`, isPlayer: true };
+            const allRanks = [...RANKING_DATA, playerRank].sort((a, b) => b.exp - a.exp);
+            allRanks.forEach((rank, index) => {
+                const rankItem = document.createElement('div');
+                rankItem.className = 'rank-item' + (rank.isPlayer ? ' battle-shake' : '');
+                rankItem.style.border = rank.isPlayer ? '2px solid var(--primary-gold)' : '';
+                const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : 'rank-other';
+                rankItem.innerHTML = `<div class="rank-number ${rankClass}">${index + 1}</div><div style="font-size: 2rem; display: flex; align-items: center;">${rank.avatar}</div><div style="flex: 1;"><div style="font-weight: 700; color: ${rank.isPlayer ? 'var(--primary-gold)' : '#e2e8f0'};">${rank.name} ${rank.isPlayer ? '(你)' : ''}</div><div style="font-size: 0.85rem; color: #94a3b8;">${REALMS[Math.min(rank.realm, REALMS.length - 1)].name}</div></div><div style="text-align: right;"><div style="font-weight: 900; color: var(--primary-gold);">${rank.exp.toLocaleString()}</div><div style="font-size: 0.85rem; color: #94a3b8;">靈力</div></div>`;
+                container.appendChild(rankItem);
+            });
+        }
+
+        // ==================== 每日簽到 ====================
+        function renderCheckIn() {
+            const container = document.getElementById('checkInContainer');
+            container.innerHTML = '';
+            const today = new Date().toDateString(); const hasCheckedIn = gameState.lastCheckIn === today;
+            for (let i = 1; i <= 7; i++) {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'check-in-day' + (i <= gameState.checkInStreak ? ' checked' : '') + (i === gameState.checkInStreak + 1 && !hasCheckedIn ? ' today' : '');
+                dayDiv.textContent = i; container.appendChild(dayDiv);
+            }
+            const checkInBtn = document.getElementById('checkInBtn');
+            checkInBtn.textContent = hasCheckedIn ? '今日已簽到' : '今日簽到';
+            checkInBtn.disabled = hasCheckedIn; checkInBtn.style.opacity = hasCheckedIn ? '0.5' : '1';
+        }
+
+        function checkIn() {
+            const today = new Date().toDateString();
+            if (gameState.lastCheckIn === today) return showNotification('提示', '今日已簽到');
+            const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+            if (gameState.lastCheckIn === yesterday.toDateString()) gameState.checkInStreak++; else gameState.checkInStreak = 1;
+            gameState.maxStreak = Math.max(gameState.maxStreak, gameState.checkInStreak); gameState.lastCheckIn = today;
+            let reward = 100 * gameState.checkInStreak; if (gameState.realm >= 9) reward *= 2;
+            
+            if (gameState.checkInStreak % 7 === 0) {
+                gameState.talentPoints += 3;
+                showNotification('簽到大獎', `連續簽到滿一周！額外獲得 3 點天賦點數！`);
+            }
+
+            gameState.exp += reward; gameState.totalExp += reward;
+            showNotification('簽到成功', `連續 ${gameState.checkInStreak} 天，獲得 ${reward} 靈力！`);
+            renderCheckIn(); checkBreakthrough(); checkAchievements(); updateDashboard(); saveGame();
+        }
+
+        // ==================== 成就系統 ====================
+        function renderAchievements() {
+            const container = document.getElementById('achievementsContainer');
+            container.innerHTML = '';
+            ACHIEVEMENTS.forEach(achievement => {
+                const isUnlocked = gameState.achievements.includes(achievement.id);
+                const achDiv = document.createElement('div');
+                achDiv.className = 'achievement' + (!isUnlocked ? ' locked' : '');
+                achDiv.innerHTML = `<span>${achievement.emoji}</span><span>${achievement.name}</span>`;
+                achDiv.title = achievement.desc; container.appendChild(achDiv);
+            });
+        }
+
+        function checkAchievements() {
+            ACHIEVEMENTS.forEach(achievement => {
+                if (gameState.achievements.includes(achievement.id)) return;
+                const condition = achievement.condition; let unlocked = false;
+                const match = condition.match(/>= (\d+)/); const val = match ? parseInt(match[1]) : 0;
+                if (condition.includes('totalExercises')) unlocked = gameState.totalExercises >= val;
+                else if (condition.includes('realm')) unlocked = gameState.realm >= val;
+                else if (condition.includes('demonsDefeated')) unlocked = gameState.demonsDefeated >= val;
+                else if (condition.includes('maxStreak')) unlocked = gameState.maxStreak >= val;
+                else if (condition.includes('talentsLearned')) unlocked = gameState.unlockedTalents.length >= val;
+                else if (condition.includes('petsOwned')) unlocked = gameState.ownedPets.length >= val;
+                else if (condition.includes('companionsOwned')) unlocked = gameState.ownedCompanions.length >= val;
+                else if (condition.includes('endingsUnlocked')) unlocked = gameState.endingsUnlocked >= val;
+                if (unlocked) { gameState.achievements.push(achievement.id); showNotification('成就解鎖', `${achievement.emoji} ${achievement.name} - ${achievement.desc}`); renderAchievements(); }
+            });
+        }
+
+        function updateEndingHint() {
+            const hint = document.getElementById('endingHint'); const hintText = document.getElementById('endingHintText');
+            if (gameState.endingsUnlocked > 0) { hint.classList.remove('locked'); const endings = ['羽化飛升', '萬古長存', '天道合一', '創世之神']; hintText.textContent = `已解鎖隱藏結局：${endings.slice(0, gameState.endingsUnlocked).join('、')}`; }
+            else { hint.classList.add('locked'); hintText.textContent = '達成真仙境界可解鎖隱藏結局...'; }
+        }
+
+        // ==================== 視覺效果 ====================
+        function showFloatText(x, y, text, color) {
+            const floatEl = document.createElement('div'); floatEl.className = 'float-text';
+            floatEl.textContent = text; floatEl.style.left = x + 'px'; floatEl.style.top = y + 'px'; floatEl.style.color = color;
+            document.body.appendChild(floatEl); setTimeout(() => floatEl.remove(), 1500);
+        }
+
+        function createParticles(x, y) {
+            for (let i = 0; i < 10; i++) {
+                const particle = document.createElement('div'); particle.className = 'particle';
+                particle.style.left = x + 'px'; particle.style.top = y + 'px';
+                particle.style.width = Math.random() * 8 + 4 + 'px'; particle.style.height = particle.style.width;
+                particle.style.background = `hsl(${Math.random() * 60 + 40}, 100%, 50%)`; particle.style.boxShadow = `0 0 10px ${particle.style.background}`;
+                const angle = Math.random() * Math.PI * 2; const velocity = Math.random() * 100 + 50;
+                const vx = Math.cos(angle) * velocity; const vy = Math.sin(angle) * velocity;
+                document.body.appendChild(particle); let px = x, py = y, opacity = 1;
+                const animate = () => { px += vx * 0.02; py += vy * 0.02; opacity -= 0.02; particle.style.left = px + 'px'; particle.style.top = py + 'px'; particle.style.opacity = opacity; if (opacity > 0) requestAnimationFrame(animate); else particle.remove(); };
+                requestAnimationFrame(animate);
+            }
+        }
+
+        function showNotification(title, message) {
+            const notif = document.getElementById('notification');
+            document.getElementById('notifTitle').textContent = title; document.getElementById('notifMessage').textContent = message;
+            notif.classList.add('show'); setTimeout(() => notif.classList.remove('show'), 3000);
+        }
+
+        // ==================== 存檔系統 ====================
+        function saveGame() { localStorage.setItem('xianxiuFitness', JSON.stringify(gameState)); }
+        function resetData() { if (confirm('確定要輪迴重生嗎？所有修為將重置！')) { localStorage.removeItem('xianxiuFitness'); location.reload(); } }
+
+        // ==================== 全局定時器 ====================
+        function startGlobalTimer() {
+            setInterval(() => {
+                if (!gameState.playerName) return;
+                let needUpdate = false;
+                if (gameState.currentStamina < gameState.maxStamina) { gameState.currentStamina = Math.min(gameState.maxStamina, gameState.currentStamina + 1); needUpdate = true; }
+                const activePage = document.querySelector('#mainPage > .page.active');
+                if (!activePage) return;
+                const pageId = activePage.id;
+                if (pageId === 'exercisePage') renderExercises();
+                if (pageId === 'petPage') renderPets();
+                if (pageId === 'companionPage') renderCompanions();
+                if (needUpdate) updateDashboard();
+            }, 1000);
+        }
+
+        // ==================== 啟動與 PWA 註冊 ====================
+        window.onload = init;
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
